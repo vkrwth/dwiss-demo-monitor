@@ -1,0 +1,42 @@
+name: DWISS public demo availability
+
+on:
+  schedule:
+    - cron: "2-57/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      force_failure:
+        description: Exercise the consecutive-failure alert route
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: dwiss-public-demo-availability
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-slim
+    timeout-minutes: 3
+    steps:
+      - name: Check out monitor
+        uses: actions/checkout@v4
+
+      - name: Check public demo content
+        id: availability
+        continue-on-error: true
+        run: >-
+          node check.mjs
+          ${{ inputs.force_failure == true && '--force-failure' || '' }}
+
+      - name: Record, escalate or recover incident
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          node manage-incident.mjs
+          ${{ steps.availability.outcome == 'failure' && '--failed' || '' }}

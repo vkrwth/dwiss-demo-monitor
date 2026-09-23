@@ -1,7 +1,7 @@
 const baseUrl = "https://dwiss-demo-preview.vercel.app";
 const forceFailure = process.argv.includes("--force-failure");
 const checks = [
-  ["/welcome", "Turn scattered shipment evidence into one traceable dossier"],
+  ["/welcome", "Give DWISS the shipment documents"],
   ["/demo", "One sample shipment. No account. No real data."],
 ];
 

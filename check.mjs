@@ -1,12 +1,20 @@
-const baseUrl = "https://dwiss-demo-preview.vercel.app";
+const baseUrl =
+  process.env.DWISS_MONITOR_BASE_URL || "https://dwiss-demo-preview.vercel.app";
 const forceFailure = process.argv.includes("--force-failure");
 const checks = [
-  ["/welcome", "Give DWISS the shipment documents"],
-  ["/demo", "One sample shipment. No account. No real data."],
+  ["/welcome", ["Give DWISS the shipment documents"]],
+  // Accept the old and new synthetic-boundary markers while the preview alias moves.
+  [
+    "/demo",
+    [
+      "One sample shipment. No account. No real data.",
+      "Synthetic sample. Changes stay in this tab and reset on reload; nothing is transmitted.",
+    ],
+  ],
 ];
 
 const failures = [];
-for (const [path, expected] of checks) {
+for (const [path, expectedAny] of checks) {
   try {
     const response = await fetch(new URL(path, baseUrl), {
       redirect: "follow",
@@ -18,7 +26,7 @@ for (const [path, expected] of checks) {
       failures.push({ path, reason: "controlled alert-route test" });
     else if (response.status !== 200)
       failures.push({ path, reason: `HTTP ${response.status}` });
-    else if (!body.includes(expected))
+    else if (!expectedAny.some((marker) => body.includes(marker)))
       failures.push({ path, reason: "expected marker missing" });
   } catch (error) {
     failures.push({
